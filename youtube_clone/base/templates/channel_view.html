@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block head_content %}
+<title>{{ channel.owner }}</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+{% endblock %}
+
+{% block content %}
+
+
+<br>
+<h1>{{ channel.owner }}</h1>
+<br>
+{% if user.is_authenticated %}
+<div class='subscribe-button'>
+    <form method="POST" action="{% url 'subscribe' %}" class="subscribe-form" id='{{ channel.id }}'>
+        <input type="hidden" name='video_id' value="{{ channel.id }}">
+        {% csrf_token %}
+    
+        <button type="submit" class='btn btn-danger subscribe-btn' id='{{ channel.id }}'>
+        {% if user not in channel.subscriber.all %}
+        Subscribe
+        {% else %}
+        Unsubscribe
+        {% endif %}
+        </button> - <span class='subscriber-count'>{{ channel.total_subscribers }}</span>
+    </form>
+</div>
+{% endif %}
+<hr>
+
+<strong>Bio</strong>
+<h5>{{ channel.owner.bio }}</h5>
+
+<br>
+<h3>Videos</h3>
+{% for video in videos %}
+<div class="card" id="video" style="width: 18rem;">
+    <img src="{{ video.thumbnail.url }}" class="card-img-top" alt="{{ video.title }}">
+    <div class="card-body" id="card-body">
+      <h5 class="card-title">{{ video.title }}</h5>{% if request.user == video.creator or user.is_staff %}<a href="{% url 'edit' video_id=video.pk video_title=video.title|slugify %}">(Edit)</a> <a href="{% url 'delete' video_id=video.pk video_title=video.title|slugify %}">(Delete)</a>{% endif %}
+      <h6 class="card-title">Views: {{ video.views }}</h6>
+      <h6 class="card-title">{{ video.creator }}</h6>
+      <small class="card-text">{{ video.upload_date }}</small><br>
+      <a href="{% url 'watch' video_id=video.pk video_title=video.title|slugify %}" class="btn btn-primary" id="watch-button">Watch</a>
+    </div>
+</div>
+
+{% endfor %}
+
+<script>
+    $('.subscribe-button').submit(function(e){
+        e.preventDefault()
+    
+        const channel_id = $(".subscribe-form").attr('id')
+        const likeText = $(`.subscribe-btn`).text()
+        const trim = $.trim(likeText)
+    
+        const url = $(".subscribe-form").attr('action')
+        console.log(url)
+        let res; 
+    
+        const subs = $(`.subscriber-count`).text()
+        const trimCount = parseInt(subs)
+        
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: {
+            'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val(),
+            'channel_id': channel_id
+            },
+            success: function(response){
+                if(trim === `Unsubscribe`){
+                $(`.subscribe-btn`).text('Subscribe')
+                res = trimCount - 1
+                $(`.subscriber-count`).text(res)
+                } else{
+                $(`.subscribe-btn`).text('Unsubscribe')
+                res = trimCount + 1
+                $(`.subscriber-count`).text(res)
+                }
+            },
+            error: function(response){
+                console.log("error", response)
+            }
+        })
+    })
+    </script>
+
+{% endblock %}

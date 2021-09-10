@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block head_content %}
+<title>Edit: {{ video.title }}</title>
+{% endblock %}
+
+{% block content %}
+
+{% if request.user == video.creator or user.is_staff %}
+<br>
+<h1>Edit Video: {{ video.title }}</h1>
+<br>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class='btn btn-secondary' type="submit">Edit</button>
+</form>
+{% else %}
+<br>
+<h2>You are not the creator of the video to edit it</h2>
+{% endif %}
+
+<style>
+.errorlist{
+    visibility: hidden;
+}
+</style>
+
+{% endblock %}

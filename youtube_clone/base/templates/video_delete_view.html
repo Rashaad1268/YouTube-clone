@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block head_content %}
+<title>Delete: {{ video.title }}</title>
+{% endblock %}
+
+{% block content %}
+
+{% if request.user == video.creator or user.is_staff %}
+<br>
+<h1>Delete: {{ video.title }}</h1>
+<br>
+    {% csrf_token %}
+    <strong>Are you sure that you want to delete: {{ video.title }}</strong><br>
+    <button class='btn btn-secondary' type="submit">Delete</button><br>
+    <a href="/">Cancel</a>
+{% else %}
+<br>
+<h2>You are not the creator of the video to delete it</h2>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block head_content %}
+<title>Private Videos</title>
+{% endblock %}
+
+{% block content %}
+
+<br>
+<h1>Private Videos</h1>
+<br>
+
+{% for video in videos %}
+{% if video.creator == request.user %}
+<br>
+<div class="card" style="width: 18rem;">
+    <img src="{{ video.thumbnail.url }}" class="card-img-top" alt="{{ video.title }}">
+    <div class="card-body">
+      <h5 class="card-title">{{ video.title }}</h5>
+      <h6 class="card-title">{{ video.creator }}</h6>
+      <small class="card-text">{{ video.upload_date }}</small><br>
+      <a href="{% url 'watch' video_id=video.pk video_title=video.title|slugify %}" class="btn btn-primary">Watch</a>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+{% endblock %}
+

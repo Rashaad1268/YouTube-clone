@@ -1,0 +1,9 @@
+.vscode/
+venv/
+youtube_clone/media/
+youtube_clone/db.sqlite3
+youtube_clone/static_cdn/
+youtube_clone/static/
+youtube_clone/admin/
+youtube_clone/youtube_clone/static
+youtube_clone/youtube_clone/settings.py

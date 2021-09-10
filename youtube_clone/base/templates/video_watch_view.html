@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block head_content %}
+<title>{{ video.title }}</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+{% endblock %}
+
+{% block content %}
+
+{% if not video.is_public and request.user != video.creator %}
+
+<br>
+<h1>This video is private</h1>
+
+{% elif not video.is_public %}
+
+<video width="auto" height="auto" controls>
+<source src="{{ video.content.url }}" type="video/mp4">
+Your browser does not support video playing.
+</video>
+<h1>{{ video.title }}</h1>{% if request.user == video.creator or user.is_staff %}<a href="{% url 'edit' video_id=video.pk video_title=video.title|slugify %}">(Edit)</a><a href="{% url 'delete' video_id=video.pk video_title=video.title|slugify %}">(Delete)</a>{% endif %}
+
+<h4>{{ video.upload_date }}</h4>
+<hr>
+<h4>Creator - {{ video.creator }}</h4>
+
+
+<bold>Description</bold>
+<h5>{{ video.description }}</h5>
+
+{% else %}
+<video width="auto" height="auto" controls>
+<source src="{{ video.content.url }}" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+
+
+<h1>{{ video.title }}</h1>{% if user == video.creator or user.is_staff %}<a href="{% url 'edit' video_id=video.pk video_title=video.title|slugify %}">(Edit)</a><a href="{% url 'delete' video_id=video.pk video_title=video.title|slugify %}">(Delete)</a>{% endif %}
+<h4>{{ video.upload_date }}<br>Views: {{ video.views }}</h4>
+{% if user.is_authenticated %}
+<div class='like-button'>
+    <form action="{% url 'like' %}" method="POST" class="like-form" id='{{ video.id }}'>
+        <input type="hidden" name='video_id' value="{{ video.id }}">
+        {% csrf_token %}
+    
+        <button type="submit" class='btn btn-primary like-btn' id='{{ video.id }}'>
+        {% if user not in video.likes.all %}
+        Like 👍
+        {% else %}
+        Unlike 👎
+        {% endif %}
+        </button> - <span class='like-count'>{{ video.total_likes }}</span>
+    </form>
+</div>
+{% endif %}
+<hr>
+<div class="card mb-3" style="max-width: 540px;">
+  <div class="row g-0">
+    <div class="col-md-4">
+      <img id="channel-owner-prof" src="{{ channel.owner.profile_picture.url }}" alt="{{ video.creator.username }}">
+    </div>
+    <div class="col-md-8">
+      <div class="card-body">
+        <h5 class="card-title"><a href="{% url 'channel' channel_id=channel.id %}">{{ video.creator.username }}</a></h5>
+        <p class="card-text">{{ channel.owner.bio }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<strong>Description</strong>
+<h5>{{ video.description }}</h5>
+
+<hr>
+<h3>Add comment</h3>
+<form method="POST">
+{% csrf_token %}
+{{ comment_form.as_p }}
+<button class='btn btn-primary add-new-comment'>Comment</button>
+</form>
+
+<br>
+{% if comments %}
+<h1>{{ comments.all.count }} Comments</h1>
+{% for comment in comments %}
+
+<div class="alert alert-dark">
+  <h4 class="alert-heading">{{ comment.commentator.username }}</h4>
+  {% if user == video.creator or user.is_staff %}<a href="{% url 'delete_comment' comment_id=comment.pk %}">(Delete)</a>{% endif %}
+  <hr>
+  <p>{{ comment.body }}</p>
+  <p class="mb-0">{{ comment.date_added }}</p>
+</div>
+
+<br>
+{% endfor %}
+{% endif %}
+
+<script>
+$('.like-form').submit(function(e){
+    e.preventDefault()
+
+    const video_id = $(this).attr('id')
+    const likeText = $(`.like-btn`).text()
+    const trim = $.trim(likeText)
+
+    const url = $(this).attr('action')
+    let res; 
+
+    const likes = $(`.like-count`).text()
+    const trimCount = parseInt(likes)
+    
+    $.ajax({
+        type: 'POST',
+        url: url,
+        data: {
+        'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val(),
+        'video_id': video_id
+        },
+        success: function(response){
+            if(trim === `Unlike 👎`){
+            $(`.like-btn`).text('Like 👍')
+            res = trimCount - 1
+            $(`.like-count`).text(`${res}`)
+            } else{
+            $(`.like-btn`).text('Unlike 👎')
+            res = trimCount + 1
+            $(`.like-count`).text(`${res}`)
+            }
+        },
+        error: function(response){
+            console.log("error", response)
+        }
+    })
+})
+</script>
+<style>
+.like-button{
+    position: relative;
+    left: 374px;
+    bottom: 50px;
+}
+#channel-owner-prof{
+  width: 150px;
+  height: auto;
+}
+.user_name{
+    font-size:14px;
+    font-weight: bold;
+}
+</style>
+
+{% endif %}
+{% endblock %}
